@@ -48,7 +48,7 @@ module AES_subTypes (
 		for (int unsigned row = 0; row < 4; row++) begin
 			for (int unsigned col = 0; col < 4; col++) begin
 				// Get the current byte in the state matrix
-				logic [7:0] currentByte = input_bytes[row][col];
+				automatic logic [7:0] currentByte = input_bytes[row][col];
 				
 					// Use the current byte of the state matrix as pointer for the sBox matrix
 					// sBox is a 16x16 matrix, so 4 bits of currentByte are used to addess the row of
