@@ -41,6 +41,14 @@ jobs:
             params: "-param EXTRACTOR_CORE=0 -param PRG_CORE=0 -param LENGTH_STATE=800 -param LENGTH_SEED=800"
     steps:
       - uses: actions/checkout@v4
+        with:
+          # ctr_drbg.sv and DP.sv instantiate both the AES and Keccak primitive cores and select
+          # between them at runtime, so keccak/ RTL is needed even for AES-only variants.
+          # NIST-Statistical-Test-Suite is unused here, so skip it and init just keccak.
+          submodules: false
+
+      - name: Init required submodule
+        run: git submodule update --init keccak
 
       - name: Install Verilator and Crypto++
         run: |
