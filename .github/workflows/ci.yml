@@ -1,0 +1,109 @@
+name: CI
+
+# ==============================================================================================
+# Project: PEARL -- PRNG Evaluation for Area, Randomness, and Leakage
+# Authors: Valeria Piscopo, Alessandra Dolmeta (EDGE Group, VLSI Lab, Dept. of Electronics and
+#          Telecommunications, Politecnico di Torino); Behnam Farnaghinejad (Dept. of Control and
+#          Computer Engineering, Politecnico di Torino)
+# ----------------------------------------------------------------------------------------------
+
+# Runs the workflows that need no proprietary EDA tools: functional simulation against the C++
+# golden models, and NIST SP 800-22 validation. ASIC (Synopsys) and FPGA (Vivado) synthesis are
+# intentionally out of scope for CI -- see readme.md's "Local Synthesis" section for how to run
+# them on a machine that has those tools.
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  functional-sim:
+    name: Functional sim (${{ matrix.module }}/${{ matrix.variant }})
+    runs-on: ubuntu-24.04 # ships Verilator 5.x, needed for the --timing testbenches
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - module: MersenneTwister
+            variant: default
+            params: ""
+          - module: ctr_drbg
+            variant: AES_CORE
+            params: "-param ENCRYPTION_CORE=1"
+          - module: ctr_drbg
+            variant: KECCAK_CORE
+            params: "-param ENCRYPTION_CORE=0"
+          - module: DP
+            variant: AES_EXT_AES_PRG
+            params: "-param EXTRACTOR_CORE=1 -param PRG_CORE=1 -param LENGTH_STATE=64 -param LENGTH_SEED=64"
+          - module: DP
+            variant: KECCAK_EXT_KECCAK_PRG
+            params: "-param EXTRACTOR_CORE=0 -param PRG_CORE=0 -param LENGTH_STATE=800 -param LENGTH_SEED=800"
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Verilator and Crypto++
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y verilator libcrypto++-dev
+          verilator --version
+
+      - name: Run functional simulation
+        run: |
+          ./scripts/run_SIM.sh -module "${{ matrix.module }}" -variant "${{ matrix.variant }}" \
+            ${{ matrix.params }} -num_patterns 50
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: sim-logs-${{ matrix.module }}-${{ matrix.variant }}
+          path: sim/${{ matrix.module }}/${{ matrix.variant }}/logs/
+
+  nist-mt19937-regression:
+    name: NIST regression guard (MT19937, full scale)
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          # NIST-Statistical-Test-Suite is public; crheepto_wip (ASIC-only, private) is skipped.
+          submodules: false
+
+      - name: Init required submodule
+        run: git submodule update --init NIST-Statistical-Test-Suite
+
+      - name: Install Crypto++ and Python plotting libraries
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y libcrypto++-dev python3-matplotlib python3-numpy
+
+      # Full report-matching scale (1e6 bits x 100 streams): this exact configuration is what
+      # caught the MT19937 periodic-reseed bug (see DEVELOPMENT.md's main_NIST.cpp section) --
+      # smaller sample sizes did not have the statistical power to expose it. Do not shrink this
+      # to "make CI faster" without re-reading that section.
+      - name: Run NIST SP 800-22 at full scale
+        run: |
+          ./scripts/run_NISTTest.sh -module MersenneTwister -stream_length 1000000 -stream_num 100
+
+      - name: Check pass-rate summary
+        run: |
+          summary="NIST_test/MersenneTwister/default/plots/pass_rate_summary.csv"
+          echo "--- $summary ---"
+          cat "$summary"
+          min_pass=$(python3 -c "
+          import csv
+          with open('$summary') as f:
+              rates = [float(row['pass_rate_percent']) for row in csv.DictReader(f)]
+          print(min(rates))
+          ")
+          echo "Minimum per-test-type pass rate: $min_pass%"
+          # Generous threshold: a healthy generator sits around 96-100%; the bug this guards
+          # against previously drove every single test's uniformity check to 0%.
+          python3 -c "import sys; sys.exit(0 if $min_pass >= 90.0 else 1)"
+
+      - name: Upload NIST report and plots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: nist-mt19937-report
+          path: NIST_test/MersenneTwister/default/

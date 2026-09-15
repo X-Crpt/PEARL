@@ -1,0 +1,83 @@
+{
+	"modules": {
+		"ctr_drbg": {
+			"variants": {
+				"KECCAK_CORE_800_Bits": {
+					"params": {
+						"ENCRYPTION_CORE": 0,
+						"OUTLEN": 800,
+						"KEYLEN": 800,
+						"REQ_NUM_BITS": 800
+					}
+				},
+				"KECCAK_CORE_1472_Bits": {
+					"params": {
+						"ENCRYPTION_CORE": 0,
+						"OUTLEN": 1472,
+						"KEYLEN": 128,
+						"REQ_NUM_BITS": 1472
+					}
+				},
+				"AES_CORE": {
+					"params": {
+						"ENCRYPTION_CORE": 1
+					}
+				},
+				"AES_CORE_HighBit": {
+					"params": {
+						"ENCRYPTION_CORE": 1,
+						"REQ_NUM_BITS": 1280
+					}
+				}
+			}
+		},
+		"DP": {
+			"variants": {
+				"KECCAK_EXT_KECCAK_PRG": {
+					"params": {
+						"EXTRACTOR_CORE": 0,
+						"PRG_CORE": 0,
+						"LENGTH_STATE": 800,
+						"LENGTH_SEED": 800
+					}
+				},
+				"KECCAK_EXT_AES_PRG": {
+					"params": {
+						"EXTRACTOR_CORE": 0,
+						"PRG_CORE": 1,
+						"LENGTH_STATE": 128,
+						"LENGTH_SEED": 128
+					}
+				},
+				"AES_EXT_KECCAK_PRG": {
+					"params": {
+						"EXTRACTOR_CORE": 1,
+						"PRG_CORE": 0,
+						"LENGTH_STATE": 64,
+						"LENGTH_SEED": 64
+					}
+				},
+				"AES_EXT_AES_PRG": {
+					"params": {
+						"EXTRACTOR_CORE": 1,
+						"PRG_CORE": 1,
+						"LENGTH_STATE": 64,
+						"LENGTH_SEED": 64
+					}
+				}
+			}
+		},
+		"MersenneTwister": {
+			"variants": {
+				"default": {
+					"params": {}
+				},
+				"128-BIT": {
+					"params": {
+						"LENGTH": 128
+					}
+				}
+			}
+		}
+	}
+}

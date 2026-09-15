@@ -1,0 +1,6 @@
+[submodule "keccak"]
+	path = keccak
+	url = https://github.com/vlsi-lab/keccak.git
+[submodule "NIST-Statistical-Test-Suite"]
+	path = NIST-Statistical-Test-Suite
+	url = https://github.com/terrillmoore/NIST-Statistical-Test-Suite.git

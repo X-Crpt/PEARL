@@ -1,0 +1,19 @@
+# Local machine/server configuration.
+/scripts/config/server.local.sh
+
+# Local ASIC standard-cell/pad/memory library configuration (points at your
+# own PDK; see scripts/config/asic_lib.example.sh).
+/scripts/config/asic_lib.local.sh
+
+# Python bytecode cache (e.g. from running the utility_scripts/*.py tools).
+__pycache__/
+*.pyc
+
+# Generated simulation outputs.
+/sim/
+
+# Generated NIST input streams, logs, reports and plots.
+/NIST_test/
+
+# Generated synthesis outputs.
+/synth/*/

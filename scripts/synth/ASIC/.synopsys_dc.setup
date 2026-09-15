@@ -1,0 +1,9 @@
+set SYNTH_ASIC_WORK_FOLDER		$::env(SYNTH_ASIC_WORK_FOLDER)
+define_design_lib WORK -path $SYNTH_ASIC_WORK_FOLDER
+# Adjust these to your own Design Compiler installation and DesignWare/library search paths.
+set search_path [list . /path/to/synopsys/libraries/syn /path/to/pdk/synopsys ]
+
+# Define the High Level components library (Design Ware)
+set synthetic_library [list "dw_foundation.sldb" ]
+
+
